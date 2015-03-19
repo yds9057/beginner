@@ -101,8 +101,6 @@ timer_sleep (int64_t ticks)
   intr_set_level (old_level);
 
   ASSERT (intr_get_level () == INTR_ON);
-  while (timer_elapsed (start) < ticks) 
-    thread_yield ();
 }
 
 /* Suspends execution for approximately MS milliseconds. */
