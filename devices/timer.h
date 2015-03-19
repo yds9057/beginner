@@ -21,8 +21,4 @@ void timer_print_stats (void);
 
 void timer_sleep_check (void);
 
-bool less_sleeping_ticks (const struct list_elem *a,
-                     const struct list_elem *b,
-                     void *aux UNUSED);
-
 #endif /* devices/timer.h */
