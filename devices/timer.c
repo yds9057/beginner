@@ -231,4 +231,3 @@ timer_sleep_check (void)
     thread_unblock(t);
   }
 }
-
