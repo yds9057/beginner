@@ -556,6 +556,7 @@ allocate_tid (void)
    Used by switch.S, which can't figure it out on its own. */
 uint32_t thread_stack_ofs = offsetof (struct thread, stack);
 
+bool
 less_sleeping_ticks (const struct list_elem *a,
                      const struct list_elem *b,
                      void *aux UNUSED);
