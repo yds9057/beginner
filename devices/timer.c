@@ -29,6 +29,8 @@ static bool too_many_loops (unsigned loops);
 static void busy_wait (int64_t loops);
 static void real_time_sleep (int64_t num, int32_t denom);
 
+static struct list sleep_list;
+
 /* Sets up the 8254 Programmable Interval Timer (PIT) to
    interrupt PIT_FREQ times per second, and registers the
    corresponding interrupt. */
@@ -84,19 +86,19 @@ timer_ticks (void)
   return t;
 }
 
-/* Returns the number of timer ticks elapsed since THEN, which
-   should be a value once returned by timer_ticks(). */
-int64_t
-timer_elapsed (int64_t then) 
-{
-  return timer_ticks () - then;
-}
-
 /* Suspends execution for approximately TICKS timer ticks. */
 void
 timer_sleep (int64_t ticks) 
 {
   int64_t start = timer_ticks ();
+
+  struct thread *t = thread_current ();
+
+  enum intr_level old_level = intr_disable ();
+  t->sleeping_ticks = start + ticks;
+  list_insert_ordered (&sleep_list, &t->elem, &less_sleeping_ticks, NULL);
+  thread_block ();
+  intr_set_level (old_level);
 
   ASSERT (intr_get_level () == INTR_ON);
   while (timer_elapsed (start) < ticks) 
@@ -137,6 +139,8 @@ timer_interrupt (struct intr_frame *args UNUSED)
 {
   ticks++;
   thread_tick ();
+
+  timer_sleep_check ();
 }
 
 /* Returns true if LOOPS iterations waits for more than one timer
@@ -200,5 +204,31 @@ real_time_sleep (int64_t num, int32_t denom)
       ASSERT (denom % 1000 == 0);
       busy_wait (loops_per_tick * num / 1000 * TIMER_FREQ / (denom / 1000)); 
     }
+}
+
+less_sleeping_ticks (const struct list_elem *a,
+                     const struct list_elem *b,
+                     void *aux UNUSED);
+{
+  struct thread *t_a = list_entry (a, struct thread, elem);
+  struct thread *t_b = list_entry (b, struct thread, elem);
+  if (t_a->sleeping_ticks < t_b->sleeping_ticks)
+    return true;
+  else
+    return false;
+}
+
+timer_sleep_check (void)
+{
+  while (list_empty (&sleep_list) == false)
+  {
+    struct thread *t = list_entry (list_begin (&sleep_list), struct thread, elem);
+    
+    if (ticks < t->sleeping_ticks)
+      break;
+
+    list_pop_front (&sleep_list);
+    thread_unblock(t);
+  }
 }
 
