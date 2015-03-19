@@ -11,6 +11,7 @@ void timer_init (void);
 void timer_calibrate (void);
 
 int64_t timer_ticks (void);
+int64_t timer_elapsed (int64_t);
 
 void timer_sleep (int64_t ticks);
 void timer_msleep (int64_t milliseconds);

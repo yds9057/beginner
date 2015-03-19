@@ -86,6 +86,14 @@ timer_ticks (void)
   return t;
 }
 
+/* Returns the number of timer ticks elapsed since THEN, which
+   should be a value once returned by timer_ticks(). */
+int64_t
+timer_elapsed (int64_t then) 
+{
+  return timer_ticks () - then;
+}
+
 /* Suspends execution for approximately TICKS timer ticks. */
 void
 timer_sleep (int64_t ticks) 
