@@ -279,7 +279,7 @@ lock_priority_rollback (void)
   struct thread *curr = thread_current ();
   
   curr->priority = curr->before_donation_priority;
-  curr->donation_count--; 
+  curr->donation_count--;
 }
 
 /* Initializes condition variable COND.  A condition variable
