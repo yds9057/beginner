@@ -563,8 +563,5 @@ less_sleeping_ticks (const struct list_elem *a,
 {
   struct thread *t_a = list_entry (a, struct thread, elem);
   struct thread *t_b = list_entry (b, struct thread, elem);
-  if (t_a->sleeping_ticks < t_b->sleeping_ticks)
-    return true;
-  else
-    return false;
+  return (t_a->sleeping_ticks < t_b->sleeping_ticks);
 }
