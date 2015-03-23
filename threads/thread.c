@@ -229,6 +229,7 @@ thread_block (void)
 void
 thread_unblock (struct thread *t) 
 {
+  struct thread *curr = thread_current ();
   enum intr_level old_level;
 
   ASSERT (is_thread (t));
@@ -238,8 +239,9 @@ thread_unblock (struct thread *t)
   list_insert_ordered (&ready_list, &t->elem, &higher_priority, NULL);
   t->status = THREAD_READY;
 
-  if (t->priority > thread_current ()->priority && thread_current () != idle_thread)
+  if (t->priority > curr->priority && curr != idle_thread)
     thread_yield ();
+  
   intr_set_level (old_level);
 }
 
