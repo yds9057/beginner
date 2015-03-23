@@ -197,6 +197,10 @@ lock_acquire (struct lock *lock)
   ASSERT (!intr_context ());
   ASSERT (!lock_held_by_current_thread (lock));
 
+  if (lock->holder != NULL)
+    if (thread_current ()->priority > lock->holder->priority)
+      lock_priority_donation (lock);
+
   sema_down (&lock->semaphore);
   lock->holder = thread_current ();
 }
@@ -235,6 +239,9 @@ lock_release (struct lock *lock)
 
   lock->holder = NULL;
   sema_up (&lock->semaphore);
+
+  if (thread_current ()->donation_count != 0)
+    lock_priority_rollback ();
 }
 
 /* Returns true if the current thread holds LOCK, false
@@ -254,6 +261,26 @@ struct semaphore_elem
     struct list_elem elem;              /* List element. */
     struct semaphore semaphore;         /* This semaphore. */
   };
+
+void
+lock_priority_donation (struct lock *lock)
+{
+  struct thread *holder = lock->holder;
+  struct thread *curr = thread_current ();
+
+  holder->before_donation_priority = holder->priority;
+  holder->priority = curr->priority;
+  curr->donation_count++;
+}
+
+void
+lock_priority_rollback (void)
+{
+  struct thread *curr = thread_current ();
+  
+  curr->priority = curr->before_donation_priority;
+  curr->donation_count--; 
+}
 
 /* Initializes condition variable COND.  A condition variable
    allows one piece of code to signal a condition and cooperating
