@@ -237,7 +237,7 @@ thread_unblock (struct thread *t)
   ASSERT (t->status == THREAD_BLOCKED);
   list_push_back (&ready_list, &t->elem);
   t->status = THREAD_READY;
-  
+
   if (t->priority > thread_current ()->priority)
     thread_yield ();
   intr_set_level (old_level);
@@ -567,4 +567,14 @@ less_sleeping_ticks (const struct list_elem *a,
   struct thread *t_a = list_entry (a, struct thread, elem);
   struct thread *t_b = list_entry (b, struct thread, elem);
   return (t_a->sleeping_ticks < t_b->sleeping_ticks);
+}
+
+bool
+higher_priority (const struct list_elem *a,
+                 const struct list_elem *b,
+                 void *aux UNUSED)
+{
+  struct thread *t_a = list_entry (a, struct thread, elem);
+  struct thread *t_b = list_entry (b, struct thread, elem);
+  return (t_a->priority > t_b->priority);
 }

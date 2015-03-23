@@ -136,7 +136,11 @@ int thread_get_recent_cpu (void);
 int thread_get_load_avg (void);
 
 bool less_sleeping_ticks (const struct list_elem *a,
-                     const struct list_elem *b,
-                     void *aux UNUSED);
+                          const struct list_elem *b,
+                          void *aux UNUSED);
+
+bool higher_priority (const struct list_elem *a,
+                      const struct list_elem *b,
+                      void *aux UNUSED);
 
 #endif /* threads/thread.h */
