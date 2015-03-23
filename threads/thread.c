@@ -307,7 +307,7 @@ thread_yield (void)
 
   old_level = intr_disable ();
   if (curr != idle_thread) 
-      list_insert_ordered (&ready_list, &t->elem, &higher_priority, NULL);
+      list_insert_ordered (&ready_list, &curr->elem, &higher_priority, NULL);
   curr->status = THREAD_READY;
   schedule ();
   intr_set_level (old_level);
@@ -318,7 +318,7 @@ void
 thread_set_priority (int new_priority) 
 {
   thread_current ()->priority = new_priority;
-  
+
   thread_yield ();
 }
 
