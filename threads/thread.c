@@ -238,7 +238,7 @@ thread_unblock (struct thread *t)
   list_push_back (&ready_list, &t->elem);
   t->status = THREAD_READY;
 
-  if (t->priority > thread_current ()->priority)
+  if (t->priority > thread_current ()->priority && thread_current () != idle_thread)
     thread_yield ();
   intr_set_level (old_level);
 }
@@ -319,7 +319,8 @@ thread_set_priority (int new_priority)
 {
   thread_current ()->priority = new_priority;
 
-  thread_yield ();
+  if (thread_current () != idle_thread)
+    thread_yield ();
 }
 
 /* Returns the current thread's priority. */
