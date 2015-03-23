@@ -235,7 +235,7 @@ thread_unblock (struct thread *t)
 
   old_level = intr_disable ();
   ASSERT (t->status == THREAD_BLOCKED);
-  list_push_back (&ready_list, &t->elem);
+  list_insert_ordered (&ready_list, &t->elem, &higher_priority, NULL);
   t->status = THREAD_READY;
 
   if (t->priority > thread_current ()->priority && thread_current () != idle_thread)
