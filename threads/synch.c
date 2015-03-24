@@ -279,10 +279,10 @@ void
 lock_priority_rollback (struct lock *lock)
 {
   struct thread *curr = thread_current ();
-  struct list *donor = lock->semaphore->waiters;
+  struct list donors = lock->semaphore.waiters;
 
-  if (!list_empty (&donor))
-    curr->priority = list_entry (list_begin (&donor), struct thread, elem)->priority;
+  if (!list_empty (&donors))
+    curr->priority = list_entry (list_begin (&donors), struct thread, elem)->priority;
   else
     curr->priority = curr->before_donation_priority;
 
