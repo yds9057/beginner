@@ -180,6 +180,7 @@ lock_init (struct lock *lock)
 
   lock->holder = NULL;
   sema_init (&lock->semaphore, 1);
+  lock->donation_happened = 0;
 }
 
 /* Acquires LOCK, sleeping until it becomes available if
@@ -200,7 +201,7 @@ lock_acquire (struct lock *lock)
   if (lock->holder != NULL)
     if (thread_current ()->priority > lock->holder->priority)
       lock_priority_donation (lock);
-
+  
   sema_down (&lock->semaphore);
   lock->holder = thread_current ();
 }
@@ -237,11 +238,10 @@ lock_release (struct lock *lock)
   ASSERT (lock != NULL);
   ASSERT (lock_held_by_current_thread (lock));
 
+  if (lock->donation_happened == 1)
+    lock_priority_rollback (lock);
   lock->holder = NULL;
   sema_up (&lock->semaphore);
-
-  if (thread_current ()->donation_count != 0)
-    lock_priority_rollback (lock);
 }
 
 /* Returns true if the current thread holds LOCK, false
@@ -268,25 +268,21 @@ lock_priority_donation (struct lock *lock)
   struct thread *holder = lock->holder;
   struct thread *curr = thread_current ();
 
-  if (holder->donation_count == 0)
-    holder->before_donation_priority = holder->priority;
+  if (lock->donation_happened == 0)
+    curr->before_donation_priority = holder->priority;
 
   holder->priority = curr->priority;
-  holder->donation_count++;
+  lock->donation_happened = 1;
 }
 
 void
 lock_priority_rollback (struct lock *lock)
 {
   struct thread *curr = thread_current ();
-  struct list donors = lock->semaphore.waiters;
+  struct list donor = lock->semaphore.waiters;
 
-  if (!list_empty (&donors))
-    curr->priority = list_entry (list_begin (&donors), struct thread, elem)->priority;
-  else
-    curr->priority = curr->before_donation_priority;
-
-  curr->donation_count--;
+  curr->priority = list_entry (list_begin (&donor), struct thread, elem)->before_donation_priority;
+  lock->donation_happened--;
 }
 
 /* Initializes condition variable COND.  A condition variable
