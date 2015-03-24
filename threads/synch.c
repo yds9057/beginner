@@ -268,9 +268,11 @@ lock_priority_donation (struct lock *lock)
   struct thread *holder = lock->holder;
   struct thread *curr = thread_current ();
 
-  holder->before_donation_priority = holder->priority;
+  if (holder->donation_count > 0)
+    holder->before_donation_priority = holder->priority;
+  
   holder->priority = curr->priority;
-  curr->donation_count++;
+  holder->donation_count++;
 }
 
 void
