@@ -241,7 +241,7 @@ lock_release (struct lock *lock)
   sema_up (&lock->semaphore);
 
   if (thread_current ()->donation_count != 0)
-    lock_priority_rollback ();
+    lock_priority_rollback (lock);
 }
 
 /* Returns true if the current thread holds LOCK, false
@@ -268,19 +268,24 @@ lock_priority_donation (struct lock *lock)
   struct thread *holder = lock->holder;
   struct thread *curr = thread_current ();
 
-  if (holder->donation_count > 0)
+  if (holder->donation_count == 0)
     holder->before_donation_priority = holder->priority;
-  
+
   holder->priority = curr->priority;
   holder->donation_count++;
 }
 
 void
-lock_priority_rollback (void)
+lock_priority_rollback (struct lock *lock)
 {
   struct thread *curr = thread_current ();
-  
-  curr->priority = curr->before_donation_priority;
+  struct list *donor = lock->semaphore->waiters;
+
+  if (!list_empty (&donor))
+    curr->priority = list_entry (list_begin (&donor), struct thread, elem)->priority;
+  else
+    curr->priority = curr->before_donation_priority;
+
   curr->donation_count--;
 }
 
