@@ -322,10 +322,14 @@ void
 thread_set_priority (int new_priority) 
 {
   struct thread *curr = thread_current ();
-  curr->original_priority = curr->priority;
-  curr->priority = new_priority;
+  int now_priority = curr->priority;
 
-  if (thread_current () != idle_thread)
+  if (curr->priority == curr->original_priority)
+    curr->priority = new_priority;
+
+  curr->original_priority = new_priority;
+
+  if (new_priority < now_priority)
     thread_yield ();
 }
 
