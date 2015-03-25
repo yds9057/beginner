@@ -86,7 +86,8 @@ sema_down (struct semaphore *sema)
   }
 
   sema->value--;
-  sema->holder = curr;
+  if (sema->holder == NULL)
+    sema->holder = curr;
   curr->sema_holder = NULL;
   curr->waiting_sema = NULL;
 
