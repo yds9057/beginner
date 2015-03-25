@@ -595,3 +595,9 @@ higher_priority (const struct list_elem *a,
   struct thread *t_b = list_entry (b, struct thread, elem);
   return (t_a->priority > t_b->priority);
 }
+
+void
+sort_ready_list (void)
+{
+  list_sort (&ready_list, &higher_priority, NULL);
+}

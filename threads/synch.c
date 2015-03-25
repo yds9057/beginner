@@ -79,7 +79,13 @@ sema_down (struct semaphore *sema)
     if (sema->holder != NULL && curr->priority > sema->holder->priority)
     {
       sema->holder->priority = curr->priority;
-      thread_unblock (sema->holder);
+      sort_ready_list();
+    
+      if (sema->holder->status == THREAD_BLOCKED) 
+      {
+        list_remove(&sema->holder->elem);
+        thread_unblock(sema->holder);
+      }
     }
 
     thread_block ();
@@ -95,7 +101,7 @@ sema_down (struct semaphore *sema)
   for (e = list_begin (&sema->waiters); e != list_end (&sema->waiters); e = list_next (e))
   {
     struct thread *waiter = list_entry(e, struct thread, elem);
-    waiter->waiting_sema = curr;
+    waiter->sema_holder = curr;
   }
 
   intr_set_level (old_level);
@@ -140,7 +146,7 @@ sema_up (struct semaphore *sema)
 
   old_level = intr_disable ();
   sema->value++;
-  if (!list_empty (&sema->waiters)) 
+  if (!list_empty (&sema->waiters))
     thread_unblock (list_entry (list_pop_front (&sema->waiters),
                                 struct thread, elem));
 
@@ -151,6 +157,7 @@ sema_up (struct semaphore *sema)
   if (sema->holder == curr)
   {
     curr->priority = curr->original_priority;
+    sort_ready_list();
 
     for (e = list_begin (&entire_thread_list); e != list_end (&entire_thread_list); e = list_next (e))
     {

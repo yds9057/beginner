@@ -149,5 +149,6 @@ bool higher_priority (const struct list_elem *a,
                       void *aux UNUSED);
 
 struct list entire_thread_list;
+void sort_ready_list (void);
 
 #endif /* threads/thread.h */
