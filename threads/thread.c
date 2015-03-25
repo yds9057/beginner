@@ -91,6 +91,7 @@ thread_init (void)
 
   lock_init (&tid_lock);
   list_init (&ready_list);
+  list_init (&entire_thread_list);
 
   /* Set up a thread structure for the running thread. */
   initial_thread = running_thread ();
@@ -292,6 +293,7 @@ thread_exit (void)
   /* Just set our status to dying and schedule another process.
      We will be destroyed during the call to schedule_tail(). */
   intr_disable ();
+  list_remove (&thread_current () ->entire_thread_elem);
   thread_current ()->status = THREAD_DYING;
   schedule ();
   NOT_REACHED ();
@@ -448,6 +450,14 @@ init_thread (struct thread *t, const char *name, int priority)
   t->stack = (uint8_t *) t + PGSIZE;
   t->priority = priority;
   t->magic = THREAD_MAGIC;
+  
+  t->original_priority = t->priority;
+  t->sema_holder = NULL;
+  t->waiting_sema  = NULL;
+
+  enum intr_level old_level = intr_disable ();
+  list_insert_ordered (&entire_thread_list, &t->entire_thread_elem, &higher_priority, NULL);
+  intr_set_level (old_level);
 }
 
 /* Allocates a SIZE-byte frame at the top of thread T's stack and

@@ -88,7 +88,6 @@ struct thread
     char name[16];                      /* Name (for debugging purposes). */
     uint8_t *stack;                     /* Saved stack pointer. */
     int priority;                       /* Priority. */
-    int before_donation_priority;
 
     /* Shared between thread.c and synch.c. */
     struct list_elem elem;              /* List element. */
@@ -102,6 +101,11 @@ struct thread
     unsigned magic;                     /* Detects stack overflow. */
 
     int64_t sleeping_ticks;
+    int original_priority; 
+    int donation_count;
+    struct thread *sema_holder;
+    struct semaphore *waiting_sema;
+    struct list_elem entire_thread_elem; 
   };
 
 /* If false (default), use round-robin scheduler.
@@ -143,5 +147,7 @@ bool less_sleeping_ticks (const struct list_elem *a,
 bool higher_priority (const struct list_elem *a,
                       const struct list_elem *b,
                       void *aux UNUSED);
+
+struct list entire_thread_list;
 
 #endif /* threads/thread.h */
