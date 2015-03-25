@@ -217,7 +217,7 @@ real_time_sleep (int64_t num, int32_t denom)
 void
 timer_sleep_check (void)
 {
-  while (list_empty (&sleep_list) == false)
+  while (!list_empty (&sleep_list))
   {
     struct thread *t = list_entry (list_begin (&sleep_list), struct thread, elem);
     
