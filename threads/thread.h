@@ -102,7 +102,6 @@ struct thread
 
     int64_t sleeping_ticks;
     int original_priority; 
-    int donation_count;
     struct thread *sema_holder;
     struct semaphore *waiting_sema;
     struct list_elem entire_thread_elem; 
