@@ -293,7 +293,7 @@ thread_exit (void)
   /* Just set our status to dying and schedule another process.
      We will be destroyed during the call to schedule_tail(). */
   intr_disable ();
-  list_remove (&thread_current () ->entire_thread_elem);
+  list_remove (&thread_current ()->entire_thread_elem);
   thread_current ()->status = THREAD_DYING;
   schedule ();
   NOT_REACHED ();
@@ -321,7 +321,9 @@ thread_yield (void)
 void
 thread_set_priority (int new_priority) 
 {
-  thread_current ()->priority = new_priority;
+  struct thread *curr = thread_current ();
+  curr->original_priority = curr->priority;
+  curr->priority = new_priority;
 
   if (thread_current () != idle_thread)
     thread_yield ();
@@ -453,7 +455,7 @@ init_thread (struct thread *t, const char *name, int priority)
   
   t->original_priority = t->priority;
   t->sema_holder = NULL;
-  t->waiting_sema  = NULL;
+  t->waiting_sema = NULL;
 
   enum intr_level old_level = intr_disable ();
   list_insert_ordered (&entire_thread_list, &t->entire_thread_elem, &higher_priority, NULL);
