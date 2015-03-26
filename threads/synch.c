@@ -157,7 +157,6 @@ sema_up (struct semaphore *sema)
   if (sema->holder == curr)
   {
     curr->priority = curr->original_priority;
-    sort_ready_list();
 
     for (e = list_begin (&entire_thread_list); e != list_end (&entire_thread_list); e = list_next (e))
     {
