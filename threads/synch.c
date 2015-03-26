@@ -72,7 +72,7 @@ sema_down (struct semaphore *sema)
   old_level = intr_disable ();
   while (sema->value == 0) 
   {
-    list_insert_ordered (&sema->waiters, &thread_current ()->elem, &higher_priority, NULL);
+    list_insert_ordered (&sema->waiters, curr->elem, &higher_priority, NULL);
     curr->sema_holder = sema->holder;
     curr->waiting_sema = sema;
 
