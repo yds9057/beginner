@@ -72,7 +72,7 @@ sema_down (struct semaphore *sema)
   old_level = intr_disable ();
   while (sema->value == 0) 
   {
-    list_insert_ordered (&sema->waiters, curr->elem, &higher_priority, NULL);
+    list_insert_ordered (&sema->waiters, &curr->elem, &higher_priority, NULL);
     curr->sema_holder = sema->holder;
     curr->waiting_sema = sema;
 
@@ -307,8 +307,18 @@ struct semaphore_elem
   {
     struct list_elem elem;              /* List element. */
     struct semaphore semaphore;         /* This semaphore. */
-    struct thread *tcb;
+    struct thread *t;
   };
+
+bool
+cond_higher_priority (const struct list_elem *a,
+                      const struct list_elem *b,
+                      void *aux UNUSED)
+{
+  struct semaphore_elem *sema_a = list_entry (a, struct semaphore_elem, elem);
+  struct semaphore_elem *sema_b = list_entry (b, struct semaphore_elem, elem);
+  return (sema_a->t->priority > sema_b->t->priority);
+}
 
 /* Initializes condition variable COND.  A condition variable
    allows one piece of code to signal a condition and cooperating
@@ -341,28 +351,11 @@ cond_init (struct condition *cond)
    interrupt handler.  This function may be called with
    interrupts disabled, but interrupts will be turned back on if
    we need to sleep. */
-
-
-bool cond_compare_func(const struct list_elem *elem,
-                       const struct list_elem *list,
-                       void *not_used)
-{
-  struct semaphore_elem *sem_elem;
-  struct semaphore_elem *sem_list;
-  sem_elem = list_entry(elem, struct semaphore_elem, elem);
-  sem_list = list_entry(list, struct semaphore_elem, elem);
-  not_used = not_used;
-
-  if (sem_elem->tcb->priority > sem_list->tcb->priority) return true;
-  else return false;
-}
-
-
-
 void
 cond_wait (struct condition *cond, struct lock *lock) 
 {
   struct semaphore_elem waiter;
+  waiter.t = thread_current ();
 
   ASSERT (cond != NULL);
   ASSERT (lock != NULL);
@@ -370,8 +363,7 @@ cond_wait (struct condition *cond, struct lock *lock)
   ASSERT (lock_held_by_current_thread (lock));
   
   sema_init (&waiter.semaphore, 0);
-  waiter.tcb = thread_current ();
-  list_insert_ordered (&cond->waiters, &waiter.elem, &higher_priority, NULL);
+  list_insert_ordered (&cond->waiters, &waiter.elem, &cond_higher_priority, NULL);
   lock_release (lock);
   sema_down (&waiter.semaphore);
   lock_acquire (lock);
